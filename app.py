@@ -49,6 +49,3 @@ def predict():
 # Run the app
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
-
-# gcloud components update
-# https://flower-classification-523681448642.us-central1.run.app
