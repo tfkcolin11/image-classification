@@ -5,7 +5,7 @@ from PIL import Image
 import io
 
 # Load the model
-model = tf.keras.models.load_model('best_model_dropout_0.5.keras')
+model = tf.keras.models.load_model('best_model_dropout_0.3.keras')
 
 # Initialize Flask app
 app = Flask(__name__)
