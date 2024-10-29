@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flower Recognition</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input[type="file"] {
+            display: none; 
+        }
+
+        label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        label:hover {
+            background-color: #0056b3;
+        }
+
+        #prediction-result {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flower Image Classification</h1>
+
+        <form method="POST" enctype="multipart/form-data" id="upload-form">
+            <label for="file-input">Choose an Image</label>
+            <input type="file" name="file" id="file-input" accept="image/*">
+            <input type="submit" value="Upload and Predict">
+        </form>
+
+        <div id="prediction-result">
+            {% if prediction %}
+                <h2>Prediction: {{ prediction }}</h2>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const form = document.getElementById('upload-form');
+        const predictionResult = document.getElementById('prediction-result');
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    predictionResult.innerHTML = `<p>Error: ${data.error}</p>`;
+                } else {
+                    predictionResult.innerHTML = `
+                        <h2>Prediction: ${data.predicted_class}</h2>
+                        <p>Confidence: ${data.confidence.toFixed(2)}</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                predictionResult.innerHTML = '<p>An error occurred.</p>';
+            });
+        });
+    </script>
+</body>
+</html>
