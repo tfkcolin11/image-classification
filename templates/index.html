@@ -1,105 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flower Recognition</title>
     <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-color: #f0f0f0;
-        }
+      body {
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: #f0f0f0;
+      }
 
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
+      .container {
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
 
-        h1 {
-            color: #333;
-        }
+      h1 {
+        color: #333;
+      }
 
-        input[type="file"] {
-            display: none; 
-        }
+      input[type="file"] {
+        display: none;
+      }
 
-        label {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+      label {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
 
-        label:hover {
-            background-color: #0056b3;
-        }
+      label:hover {
+        background-color: #0056b3;
+      }
 
-        #prediction-result {
-            margin-top: 20px;
-            font-size: 1.2em;
+      #prediction-result {
+        margin-top: 20px;
+        font-size: 1.2em;
+      }
+      #loading-indicator {
+        display: none; /* Hide by default */
+        margin-top: 20px;
+        font-size: 1.2em;
+      }
+
+      .loader {
+        border: 5px solid #f3f3f3; /* Light grey */
+        border-top: 5px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 2s linear infinite;
+        margin: auto;
+      }
+
+      /* Style for flower placeholders */
+      .flower-placeholder {
+        width: 100px; /* Adjust size as needed */
+        text-align: center;
+        margin: 10px;
+        display: inline-block;
+      }
+
+      .flower-placeholder img {
+        width: 100%; /* Make image fill the container width */
+        height: auto; /* Maintain aspect ratio */
+        border: 1px solid #ccc;
+      }
+      #upload-form input[type="submit"] {
+        background-color: #007bff; /* Example button color */
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease; /* Add a transition effect */
+      }
+
+      #upload-form input[type="submit"]:hover {
+        background-color: #0056b3; /* Darker color on hover */
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>Flower Image Classification</h1>
+      <h1>Flower Image Classification</h1>
 
-        <form method="POST" enctype="multipart/form-data" id="upload-form">
-            <label for="file-input">Choose an Image</label>
-            <input type="file" name="file" id="file-input" accept="image/*">
-            <input type="submit" value="Upload and Predict">
-        </form>
+      <p>
+        Welcome! This app can recognize different types of flowers. Upload an
+        image of a flower, and we'll try to predict what kind it is. We can
+        currently identify these flowers:
+      </p>
 
-        <div id="prediction-result">
-            {% if prediction %}
-                <h2>Prediction: {{ prediction }}</h2>
-            {% endif %}
+      <div>
+        <div class="flower-placeholder">
+          <img src="{{ url_for('static', filename='rose.jpg') }}" alt="Rose" />
+          <p>Rose</p>
         </div>
+        <div class="flower-placeholder">
+          <img
+            src="{{ url_for('static', filename='daisy.jpg') }}"
+            alt="Daisy"
+          />
+          <p>Daisy</p>
+        </div>
+        <div class="flower-placeholder">
+          <img
+            src="{{ url_for('static', filename='Sunflower.jpeg') }}"
+            alt="Sunflower"
+          />
+          <p>Sunflower</p>
+        </div>
+        <div class="flower-placeholder">
+          <img
+            src="{{ url_for('static', filename='tulip.avif') }}"
+            alt="Tulip"
+          />
+          <p>Tulip</p>
+        </div>
+        <div class="flower-placeholder">
+          <img
+            src="{{ url_for('static', filename='dandelion.jpeg') }}"
+            alt="Dandelion"
+          />
+          <p>Dandelion</p>
+        </div>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" id="upload-form">
+        <label for="file-input">Choose an Image</label>
+        <input type="file" name="file" id="file-input" accept="image/*" />
+        <input type="submit" value="Upload and Predict" />
+      </form>
+
+      <div id="image-preview" style="display:none;">  </div>
+      <div id="loading-indicator">
+        <div class="loader"></div>
+        <span id="timer">Predicting...</span>
+      </div>
+
+      <div id="prediction-result">
+        {% if prediction %}
+        <h2>Prediction: {{ prediction }}</h2>
+        {% endif %}
+      </div>
     </div>
 
     <script>
-        const fileInput = document.getElementById('file-input');
-        const form = document.getElementById('upload-form');
-        const predictionResult = document.getElementById('prediction-result');
+      const fileInput = document.getElementById("file-input");
+      const form = document.getElementById("upload-form");
+      const predictionResult = document.getElementById("prediction-result");
+      const loadingIndicator = document.getElementById("loading-indicator");
+      const timerSpan = document.getElementById("timer");
+      const uploadedImage = document.getElementById("uploaded-image");
+      const imagePreview = document.getElementById("image-preview");
 
-        form.addEventListener('submit', (event) => {
-            event.preventDefault(); // Prevent default form submission
+      // Event listener for file input change
+      fileInput.addEventListener("change", (event) => {
+        if (fileInput.files && fileInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            imagePreview.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image" style="max-width: 100px; max-height: 100px;">`;
+            imagePreview.style.display = "block"; // Show the preview
+            // Reset UI elements
+            predictionResult.innerHTML = ""; // Clear prediction results
+            loadingIndicator.style.display = "none"; // Hide loading indicator
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        } else {
+          imagePreview.style.display = "none"; // Hide if no file selected
+        }
+      });
 
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
 
-            fetch('/predict', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    predictionResult.innerHTML = `<p>Error: ${data.error}</p>`;
-                } else {
-                    predictionResult.innerHTML = `
+        // Show loading indicator and start timer
+        loadingIndicator.style.display = "block";
+        predictionResult.innerHTML = ""; // Clear previous results
+        let startTime = new Date();
+        timerSpan.textContent = "Predicting...";
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        fetch("/predict", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // Calculate and display prediction time
+            let endTime = new Date();
+            let predictionTime = (endTime - startTime) / 1000;
+            timerSpan.textContent = `Predicted in ${predictionTime.toFixed(
+              2
+            )} seconds`;
+
+            if (data.error) {
+              predictionResult.innerHTML = `<p>Error: ${data.error}</p>`;
+            } else {
+              predictionResult.innerHTML = `
                         <h2>Prediction: ${data.predicted_class}</h2>
                         <p>Confidence: ${data.confidence.toFixed(2)}</p>
+                        <p>Prediction time: ${predictionTime} seconds</p>
                     `;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                predictionResult.innerHTML = '<p>An error occurred.</p>';
-            });
-        });
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            predictionResult.innerHTML = "<p>An error occurred.</p>";
+          })
+          .finally(() => {
+            // Hide loading indicator regardless of success or error
+            loadingIndicator.style.display = "none";
+          });
+      });
     </script>
-</body>
+  </body>
 </html>
